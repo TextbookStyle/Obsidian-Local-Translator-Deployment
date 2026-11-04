@@ -1,0 +1,28 @@
+{
+  "name": "obsidian-llm-text-assistant",
+  "version": "1.1.0",
+  "description": "Process, translate and refine selected text with any OpenAI-compatible LLM directly in the Obsidian editor",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "typecheck": "tsc -noEmit -skipLibCheck",
+    "smoke": "node --experimental-strip-types scripts/smoke.ts"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "llm",
+    "translation",
+    "text-processing"
+  ],
+  "author": "s1t5",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "esbuild": "^0.21.5",
+    "obsidian": "^1.4.16",
+    "tslib": "2.6.3",
+    "typescript": "5.4.5"
+  }
+}

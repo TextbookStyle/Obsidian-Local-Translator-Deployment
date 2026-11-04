@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preserve exact bytes of plugin files checked against assets.json.
+vendor/llm-text-assistant/main.js text eol=lf
+vendor/llm-text-assistant/manifest.json text eol=lf
+vendor/llm-text-assistant/styles.css text eol=lf

@@ -1,0 +1,123 @@
+# Release Obsidian plugin
+#
+# Automatically creates a GitHub release with the plugin assets whenever a
+# push to main contains a manifest.json version that has no matching tag yet
+# (i.e. a new/unreleased version was committed).
+#
+# - The tag name equals the manifest.json version exactly (x.y.z, no "v"
+#   prefix) — required by the Obsidian community directory.
+# - Assets are attached as binary files: main.js, manifest.json, styles.css.
+# - Releases are published (not drafts) with auto-generated notes, so Obsidian
+#   users receive the update immediately.
+# - If the tag already exists (e.g. fixes pushed without a version bump),
+#   the job exits successfully without creating a duplicate release.
+
+name: Release Obsidian plugin
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: npm
+
+      - name: Detect unreleased version
+        id: version
+        run: |
+          git fetch --tags --force
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Manifest version: $VERSION"
+
+          # Obsidian requires strict x.y.z (no v prefix)
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::manifest.json version '$VERSION' is not in x.y.z format"
+            exit 1
+          fi
+
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Tag $VERSION already exists — nothing to release."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "New version $VERSION detected — building release."
+          fi
+
+      - name: Build plugin
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          npm install --no-fund --no-audit
+          npm run build
+
+      - name: Verify build artifacts
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          test -f main.js || { echo "::error::main.js missing after build"; exit 1; }
+          test -f manifest.json || { echo "::error::manifest.json missing"; exit 1; }
+          test -f styles.css || { echo "::error::styles.css missing"; exit 1; }
+          BUILT_VERSION=$(jq -r '.version' manifest.json)
+          if [ "$BUILT_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::manifest.json version ($BUILT_VERSION) does not match expected version"
+            exit 1
+          fi
+
+      - name: Generate artifact attestation
+        if: steps.version.outputs.changed == 'true'
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+
+      - name: Create release with assets
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # --target creates the tag (named exactly like the version) on the
+          # pushed commit; the release is published with generated notes.
+          gh release create "$VERSION" \
+            --title="$VERSION" \
+            --target="$GITHUB_SHA" \
+            --generate-notes \
+            main.js manifest.json styles.css
+
+      - name: Ensure release is published (not a draft)
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Safety net: if the release ended up as a draft for any reason
+          # (gh edge cases with --target/asset uploads, repo state), publish
+          # it explicitly so Obsidian users receive the update immediately.
+          if [ "$(gh release view "$VERSION" --json isDraft -q .isDraft)" = "true" ]; then
+            echo "Release $VERSION was created as a draft — publishing it now."
+            gh release edit "$VERSION" --draft=false
+          fi
+          echo "Release $VERSION isDraft: $(gh release view "$VERSION" --json isDraft -q .isDraft)"

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "ollama": {
+    "version": "0.40.14",
+    "fileName": "OllamaSetup-0.40.14.exe",
+    "size": 1675999728,
+    "sha256": "e069c7cc7d4808f77684e81efa0b1f853a5190b4b8f070bc8fd63041180e3eba",
+    "urls": [
+      "https://github.com/ollama/ollama/releases/download/v0.40.14/OllamaSetup.exe",
+      "https://ollama.com/download/OllamaSetup.exe?version=0.40.14"
+    ]
+  },
+  "model": {
+    "name": "hy-mt2-obsidian:Q4_K_M",
+    "fileName": "Hy-MT2-1.8B-Q4_K_M.gguf",
+    "size": 1133080448,
+    "sha256": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699",
+    "urls": [
+      "https://modelscope.cn/api/v1/models/Tencent-Hunyuan/Hy-MT2-1.8B-GGUF/repo?Revision=master&FilePath=Hy-MT2-1.8B-Q4_K_M.gguf",
+      "https://huggingface.co/tencent/Hy-MT2-1.8B-GGUF/resolve/a0c709d9fac510f2c807aa3af52872340dc37a4a/Hy-MT2-1.8B-Q4_K_M.gguf"
+    ]
+  },
+  "plugin": {
+    "id": "llm-text-assistant",
+    "version": "1.1.0",
+    "upstream": "https://github.com/s1t5/LLM-Text-Assistant-Obsidian",
+    "upstreamCommit": "7e32d36f3a0dc7ef07689505659c874e53c5fea3",
+    "patchCommit": "2b0876a19740828f7b6cc88e8c79a1cfbd1cbe39",
+    "patchDescription": "Four CSS declarations: normal foreground with translucent red/green diff backgrounds.",
+    "files": {
+      "main.js": "2d815e19d50f1e5ee3b38642fa946848c39d2ddd3dcdddf4156e94b8d9c7dbd1",
+      "manifest.json": "94cb6f6e13df3cb1532f521de898da8fc684e4e9157e744a958cbe4534aa1156",
+      "styles.css": "5ffce5f085590676afdfe2c0914c556a3736ef9aa3214631c91a04ada8b01bb5"
+    }
+  }
+}
